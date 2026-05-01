@@ -5,7 +5,7 @@ from src.db.database import SessionLocal
 from src.schemas.site_schema import SiteCreate, SiteResponse
 from src.services.site_service import *
 
-router = APIRouter(prefix="/sites", tags=["Sites"])
+site_router = APIRouter(prefix="/sites", tags=["Sites"])
 
 
 def get_db():
@@ -16,17 +16,17 @@ def get_db():
         db.close()
 
 
-@router.post("/", response_model=SiteResponse)
+@site_router.post("/", response_model=SiteResponse)
 def create(site: SiteCreate, db: Session = Depends(get_db)):
     return create_site(db, site.url)
 
 
-@router.get("/", response_model=list[SiteResponse])
+@site_router.get("/", response_model=list[SiteResponse])
 def find_all(db: Session = Depends(get_db)):
     return get_all_sites(db)
 
 
-@router.get("/{site_id}", response_model=SiteResponse)
+@site_router.get("/{site_id}", response_model=SiteResponse)
 def find_by_id(site_id: int, db: Session = Depends(get_db)):
     site = get_site_by_id(db, site_id)
     if not site:
@@ -34,7 +34,7 @@ def find_by_id(site_id: int, db: Session = Depends(get_db)):
     return site
 
 
-@router.delete("/{site_id}")
+@site_router.delete("/{site_id}")
 def delete(site_id: int, db: Session = Depends(get_db)):
     site = delete_site(db, site_id)
     if not site:
