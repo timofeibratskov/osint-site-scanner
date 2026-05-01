@@ -41,10 +41,15 @@ class SecurityHeaders(BaseModel):
 
 
 class HeadersReport(BaseModel):
-    analysis_info: Dict[str, Any] # Теперь тут могут быть и строки, и числа
+    analysis_info: Dict[str, Any]
     server_info: Dict[str, Optional[str]]
     security_headers: SecurityHeaders
 
+class AiSecurityAnalysis(BaseModel):
+    summary: str
+    vulnerabilities: List[str]
+    recommendations: List[str]
+    risk_score: int
 
 class ScanResponse(BaseModel):
     target: TargetInfo
@@ -57,6 +62,7 @@ class ScanResponse(BaseModel):
     leaks_dorks: Dict
     social_links: SocialReport
     found_emails: Dict
+    ai_analysis: Optional[AiSecurityAnalysis] = None
 
     class Config:
         from_attributes = True

@@ -1,7 +1,10 @@
 import httpx
 from bs4 import BeautifulSoup
 from src.services import scan
+from src.services.ai_service import ask_gemini
 from fastapi import HTTPException
+import json
+
 
 async def scan_site(full_url: str) -> dict:
     domain = str(full_url).replace("https://", "").replace("http://", "").split('/')[0]
@@ -35,5 +38,37 @@ async def scan_site(full_url: str) -> dict:
         "social_links": scan.run_social(html_text),
         "found_emails": scan.run_emails(html_text)
     }
+    print("create report successfully")
+
+    ai_prompt = f"""
+    Ты эксперт по кибербезопасности. Проанализируй данные OSINT сканирования для домена: {report['target']['domain']}
+    
+    ДАННЫЕ:
+    1. Заголовки: {report['headers']['security_headers']}
+    2. Технологии: {report['technologies']}
+    3. Сервисные файлы: {report['service_files']}
+    4. Утечки/Dorks: {report['leaks_dorks']}
+
+    ЗАДАЧА:
+    Проведи аудит. Ответь СТРОГО в формате JSON, соответствующем схеме:
+    {{
+        "summary": "текст",
+        "vulnerabilities": ["уязвимость1", "уязвимость2"],
+        "recommendations": ["совет1", "совет2"],
+        "risk_score": число_от_1_до_10
+    }}
+    Язык ответов — русский.
+    """
+
+    try:
+        ai_response = ask_gemini(ai_prompt)
+        print(ai_response)
+
+        clean_json = ai_response.replace("```json", "").replace("```", "").strip()
+
+        report["ai_analysis"] = json.loads(clean_json)
+    except Exception as e:
+        print(f"Ошибка парсинга AI: {e}")
+        report["ai_analysis"] = None
 
     return report
