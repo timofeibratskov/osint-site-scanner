@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: diplom
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1111
+      POSTGRES_DB: osint_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - diplom_data:/var/lib/postgresql/data
+
+volumes:
+  diplom_data:
