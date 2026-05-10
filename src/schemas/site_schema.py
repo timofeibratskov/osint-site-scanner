@@ -1,5 +1,6 @@
 from pydantic import BaseModel, HttpUrl, Field
 from typing import List, Dict, Optional, Any
+from datetime import datetime
 
 
 class SiteCreate(BaseModel):
@@ -9,10 +10,6 @@ class SiteCreate(BaseModel):
 class SiteResponse(BaseModel):
     id: int
     domain: str
-
-
-class ScanRequest(BaseModel):
-    url: HttpUrl
 
 
 class TargetInfo(BaseModel):
@@ -68,3 +65,16 @@ class ScanResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ScanDetailsResponse(BaseModel):
+    timestamp: datetime
+    raw_data: Optional[ScanResponse] = None
+    ai_response: Optional[str] = None
+
+
+class SiteDetailsResponse(BaseModel):
+    id: int
+    domain: str
+    created_at: datetime
+    scans: List[ScanDetailsResponse]

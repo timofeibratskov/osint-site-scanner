@@ -1,12 +1,24 @@
 import httpx
 from bs4 import BeautifulSoup
+from fastapi import HTTPException
+
+from src.db.database import SessionLocal
+from src.db.models import Site, Scan
 from src.services import scan
 from src.services.ai_service import ask_gemini
-from fastapi import HTTPException
 import json
 
 
-async def scan_site(full_url: str) -> dict:
+async def scan_site(site_id: int):
+    with SessionLocal() as db:
+        db_site = db.query(Site).filter(Site.id == site_id).first()
+        if not db_site:
+            print(f"Сайт {site_id} не найден")
+            return
+
+        domain = db_site.domain
+
+    full_url = f"http://{domain}"
     domain = str(full_url).replace("https://", "").replace("http://", "").split('/')[0]
 
     async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
@@ -59,7 +71,7 @@ async def scan_site(full_url: str) -> dict:
     }}
     Язык ответов — русский.
     """
-
+    ai_response = ""
     try:
         ai_response = ask_gemini(ai_prompt)
         print(ai_response)
@@ -71,4 +83,15 @@ async def scan_site(full_url: str) -> dict:
         print(f"Ошибка парсинга AI: {e}")
         report["ai_analysis"] = None
 
-    return report
+    try:
+        new_scan = Scan(
+            site_id=site_id,
+            raw_data=report,
+            ai_report=ai_response
+        )
+        db.add(new_scan)
+        db.commit()
+        print(f"Скан для {domain} (ID: {site_id}) успешно сохранен!")
+    except Exception as e:
+        db.rollback()
+        print(f"Ошибка сохранения в базу: {e}")
