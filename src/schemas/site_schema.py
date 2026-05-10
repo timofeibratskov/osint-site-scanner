@@ -1,14 +1,14 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, Field
 from typing import List, Dict, Optional, Any
 
 
 class SiteCreate(BaseModel):
-    url: str
+    domain: str
 
 
 class SiteResponse(BaseModel):
     id: int
-    url: str
+    domain: str
 
 
 class ScanRequest(BaseModel):
@@ -45,11 +45,13 @@ class HeadersReport(BaseModel):
     server_info: Dict[str, Optional[str]]
     security_headers: SecurityHeaders
 
+
 class AiSecurityAnalysis(BaseModel):
     summary: str
     vulnerabilities: List[str]
     recommendations: List[str]
     risk_score: int
+
 
 class ScanResponse(BaseModel):
     target: TargetInfo
