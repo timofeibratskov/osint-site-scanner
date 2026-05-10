@@ -13,12 +13,9 @@ def main(page: ft.Page):
     domains_column = ft.Column(spacing=10)
     url_input = ft.TextField(label="Введите домен (example.com)", on_submit=lambda _: send_scan_request())
 
-    # --- ФУНКЦИЯ УДАЛЕНИЯ ---
     def delete_domain(domain_id):
         try:
             with httpx.Client() as client:
-                # Отправляем запрос на удаление по ID
-                # Убедись, что путь в FastAPI такой: DELETE /sites/{id}
                 response = client.delete(f"{API_BASE_URL}/sites/{domain_id}")
                 if response.status_code == 200 or response.status_code == 204:
                     load_domains() # Перерисовываем список
