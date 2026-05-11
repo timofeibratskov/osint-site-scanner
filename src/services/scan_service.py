@@ -6,10 +6,9 @@ from src.db.database import SessionLocal
 from src.db.models import Site, Scan
 from src.services import scan
 from src.services.ai_service import ask_gemini
-import json
 
 
-async def scan_site(site_id: int):
+def scan_site(site_id: int):
     with SessionLocal() as db:
         db_site = db.query(Site).filter(Site.id == site_id).first()
         if not db_site:
@@ -21,9 +20,9 @@ async def scan_site(site_id: int):
     full_url = f"http://{domain}"
     domain = str(full_url).replace("https://", "").replace("http://", "").split('/')[0]
 
-    async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
+    with httpx.Client(timeout=15, follow_redirects=True) as client:
         try:
-            response = await client.get(str(full_url))
+            response = client.get(str(full_url))
             html_text = response.text
             status_code = response.status_code
         except Exception as e:
@@ -62,26 +61,19 @@ async def scan_site(site_id: int):
     4. Утечки/Dorks: {report['leaks_dorks']}
 
     ЗАДАЧА:
-    Проведи аудит. Ответь СТРОГО в формате JSON, соответствующем схеме:
-    {{
-        "summary": "текст",
-        "vulnerabilities": ["уязвимость1", "уязвимость2"],
-        "recommendations": ["совет1", "совет2"],
-        "risk_score": число_от_1_до_10
-    }}
-    Язык ответов — русский.
+    Напиши отчет в свободном текстовом стиле по пунктам:
+    1. Описание сайта.
+    2. Проблемы и уязвимости.
+    3. Советы и рекомендации.
+    4. Оценка защищенности (от 1 до 10).
+    
+    Отвечай СТРОГО текстом, без использования JSON и фигурных скобок.
     """
-    ai_response = ""
-    try:
-        ai_response = ask_gemini(ai_prompt)
-        print(ai_response)
+    ai_response = ask_gemini(ai_prompt)
 
-        clean_json = ai_response.replace("```json", "").replace("```", "").strip()
-
-        report["ai_analysis"] = json.loads(clean_json)
-    except Exception as e:
-        print(f"Ошибка парсинга AI: {e}")
-        report["ai_analysis"] = None
+    if ai_response is not None :
+        print("ai response created successfully")
+        ai_response.replace("```json", "").replace("```", "").strip()
 
     try:
         new_scan = Scan(
@@ -91,7 +83,7 @@ async def scan_site(site_id: int):
         )
         db.add(new_scan)
         db.commit()
-        print(f"Скан для {domain} (ID: {site_id}) успешно сохранен!")
+        print(f"Скан для {domain} успешно сохранен!")
     except Exception as e:
         db.rollback()
         print(f"Ошибка сохранения в базу: {e}")

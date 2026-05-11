@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from src.services.scan_service import scan_site
 from src.db.database import SessionLocal
-from src.schemas.site_schema import SiteCreate, SiteResponse, SiteDetailsResponse
+from src.schemas.site_schema import SiteCreate, SiteResponse, SiteDetailsResponse, ScanDetailsResponse
 from src.db.models import Site
 
 site_router = APIRouter(prefix="/sites", tags=["Sites"])
@@ -45,7 +45,19 @@ def find_by_id(site_id: int, db: Session = Depends(get_db)):
     site = (db.query(Site).filter(Site.id == site_id).first())
     if not site:
         raise HTTPException(status_code=404, detail="not found!")
-    return site
+    return SiteDetailsResponse(
+        id=site.id,
+        domain=site.domain,
+        created_at=site.created_at,
+        scans=[
+            ScanDetailsResponse(
+                timestamp=s.timestamp,
+                raw_data=s.raw_data,
+                ai_response=s.ai_report
+            )
+            for s in site.scans
+        ]
+    )
 
 
 @site_router.delete("/{site_id}")

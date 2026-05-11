@@ -43,13 +43,6 @@ class HeadersReport(BaseModel):
     security_headers: SecurityHeaders
 
 
-class AiSecurityAnalysis(BaseModel):
-    summary: str
-    vulnerabilities: List[str]
-    recommendations: List[str]
-    risk_score: int
-
-
 class ScanResponse(BaseModel):
     target: TargetInfo
     whois: Dict
@@ -61,7 +54,6 @@ class ScanResponse(BaseModel):
     leaks_dorks: Dict
     social_links: SocialReport
     found_emails: Dict
-    ai_analysis: Optional[AiSecurityAnalysis] = None
 
     class Config:
         from_attributes = True
@@ -72,9 +64,15 @@ class ScanDetailsResponse(BaseModel):
     raw_data: Optional[ScanResponse] = None
     ai_response: Optional[str] = None
 
+    class Config:
+        from_attributes = True
+
 
 class SiteDetailsResponse(BaseModel):
     id: int
     domain: str
     created_at: datetime
     scans: List[ScanDetailsResponse]
+
+    class Config:
+        from_attributes = True
